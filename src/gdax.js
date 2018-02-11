@@ -120,8 +120,8 @@ function executeTwoLegTrade(
             } else {
                 if(!monitorSellMode) {
                     const buyOrder = await client.getOrder(buyOrderId.id);
-                    console.log("Verifying BUY order...");
-                    output('table', [buyOrder]);
+                    // console.log("Verifying BUY order...");
+                    // output('table', [buyOrder]);
                     if(buyOrder.status === "rejected") {
                         console.log("Failed to buy at params");
                         process.exit();
@@ -132,11 +132,10 @@ function executeTwoLegTrade(
                         output('table', [sellOrderId]);
                         monitorSellMode = true;
                     }
-
                 } else {
                     const sellOrder = await client.getOrder(sellOrderId.id);
-                    console.log("Verifying SELL order...");
-                    output('table', [sellOrder]);
+                    // console.log("Verifying SELL order...");
+                    // output('table', [sellOrder]);
                     if(sellOrder.status === "rejected") {
                         monitorSellMode = false;
                         sellOrderSubmitted = false;
@@ -253,6 +252,7 @@ async function listCostBasis(client, mode = 'json') {
 }
 
 module.exports = {
+    output,
     listProducts,
     listCoinbaseAccounts,
     listGdaxAccounts,

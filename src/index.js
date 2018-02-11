@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
 const commander = require('commander');
+
 const fs = require('fs');
 const gdax = require('./gdax');
 const Gdax = require('gdax');
 const ExtendedClient = require('./authenticated');
+const math = require('./math');
+const _ = require('lodash');
 
 const apiURI = 'https://api.gdax.com';
 const sandboxURI = 'https://api-public.sandbox.gdax.com';
@@ -84,6 +87,7 @@ commander.version('0.1.0')
         'Entry Threshold')
     .option('--exit-price <exitPrice>',
         'Exit Threshold ')
+    .option('--logarithmic-steps <steps>', 'Scale logarithmically this number of times', 1)
 	.parse(process.argv);
 
 function determineURI() {
@@ -250,48 +254,68 @@ if(commander.sellLimit) {
     }
 }
 
-if(commander.executeTwoLeg && commander.entryPrice && commander.exitPrice && commander.buySourceAmount) {
+if(
+    commander.executeTwoLeg &&
+    commander.entryPrice &&
+    commander.exitPrice &&
+    commander.buySourceAmount &&
+    commander.logarithmicSteps
+) {
+    let orderCount = 0;
     const product = commander.executeTwoLeg;
+    const logarithmicSteps = Number(commander.logarithmicSteps);
+    const logScale = math.calculateLog10Scale(logarithmicSteps);
+    const buySourceAmount = commander.buySourceAmount;
     const entryPrice = Number(commander.entryPrice).toFixed(5);
     const exitPrice = Number(commander.exitPrice).toFixed(5);
-    const buySourceAmount = commander.buySourceAmount;
-    const targetAmount = Number(buySourceAmount / entryPrice).toFixed(5);
 
-    if(entryPrice >= exitPrice) {
-        console.log("Entry must be less than Exit");
-        process.exit()
-    }
-
-    console.log(`Beginning Monitored Two Leg Trade for ${product}`);
-    console.log(`Entry [BUY] Price: ${entryPrice}`);
-    console.log(`Exit [SELL] Price: ${exitPrice}`);
-    console.log(`Trade Amount:      ${targetAmount}`);
-
-    const profit = (exitPrice * targetAmount) - (entryPrice * targetAmount);
-
-    console.log(`Successful Execution will NET $${profit} USD`);
+    const buyPrices = math.calculatePricesForScale(Number(entryPrice), Number(entryPrice) * 0.95, logScale, math.log10Form);
+    const sellPrices = math.calculatePricesForScale(Number(exitPrice), Number(exitPrice) * 1.05, logScale, math.log10Form);
 
     const buyParams = {
         side: 'buy',
-        price: entryPrice,
-        size: targetAmount,
         product_id: product,
         post_only: true
     };
 
     const sellParams = {
         side: 'sell',
-        price: exitPrice,
-        size: targetAmount,
         product_id: product,
         post_only: true
     };
 
-    gdax.executeTwoLegTrade(
-        getCredentials(),
-        getAuthenticatedClient(),
-        profit,
-        product,
-        buyParams,
-        sellParams);
+    const twoLegPairs = _.map(buyPrices, (b, idx) => {
+        const targetAmount = Number((buySourceAmount / logarithmicSteps) / b).toFixed(5);
+        return {
+            buy: _.merge({}, buyParams, {
+                size: targetAmount,
+                price: Number(b).toFixed(2)
+            }),
+            sell: _.merge({}, sellParams, {
+                size: targetAmount,
+                price: Number(sellPrices[idx]).toFixed(2)
+            })
+        };
+    });
+
+
+    const orders = _.map(twoLegPairs, (pair) => {
+        const profit = (pair.sell.price * pair.sell.size) - (pair.buy.price * pair.buy.size);
+        console.log("Profit for order: ", profit);
+        const trade = gdax.executeTwoLegTrade(
+            getCredentials(),
+            getAuthenticatedClient(),
+            profit,
+            product,
+            pair.buy,
+            pair.sell);
+
+        return {
+            profit, trade,
+            sell: pair.sell,
+            buy: pair.buy
+        }
+    });
+
+    gdax.output(determineOutputMode(), orders);
 }
