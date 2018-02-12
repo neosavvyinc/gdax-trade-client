@@ -269,8 +269,8 @@ if(
     const entryPrice = Number(commander.entryPrice).toFixed(5);
     const exitPrice = Number(commander.exitPrice).toFixed(5);
 
-    const buyPrices = math.calculatePricesForScale(Number(entryPrice), Number(entryPrice) * 0.95, logScale, math.log10Form);
-    const sellPrices = math.calculatePricesForScale(Number(exitPrice), Number(exitPrice) * 1.05, logScale, math.log10Form);
+    const buyPrices = math.calculatePricesForScale(Number(entryPrice), Number(entryPrice) * 0.999, logScale, math.log10Form);
+    const sellPrices = math.calculatePricesForScale(Number(exitPrice), Number(exitPrice) * 1.005, logScale, math.log10Form);
 
     const buyParams = {
         side: 'buy',
@@ -317,5 +317,5 @@ if(
         }
     });
 
-    gdax.output(determineOutputMode(), orders);
+    gdax.output(determineOutputMode(), orders, "profit");
 }

@@ -124,7 +124,7 @@ function executeTwoLegTrade(
                     // output('table', [buyOrder]);
                     if(buyOrder.status === "rejected") {
                         console.log("Failed to buy at params");
-                        process.exit();
+                        // process.exit();
                     }
                     if(buyOrder.settled === true && !sellOrderSubmitted) {
                         sellOrderSubmitted = true;
@@ -143,7 +143,7 @@ function executeTwoLegTrade(
                     if(sellOrder.settled === true) {
                         // monitor trade until it is settled and display profit
                         console.log(`Order by id: ${sellOrder.id} complete with $${profit} USD`);
-                        process.exit();
+                        // process.exit();
                     }
                 }
             }
