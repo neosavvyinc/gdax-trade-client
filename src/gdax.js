@@ -170,7 +170,7 @@ async function cancelAllOrders(client, mode = 'json') {
 
 async function cancelForProduct(client, product, mode = 'json') {
     try {
-        const cancelled = await client.cancelAllOrders({ product_id: product });
+        const cancelled = await client.cancelAllOrders({ product_id: product }, _.noop);
         output(mode, cancelled);
     } catch (error) {
         console.log(error);
@@ -186,7 +186,7 @@ async function placeOrderWrapper(client, product, amount, limitPrice, side, mode
         post_only: true
     };
     const orderConfirmation = await client.placeOrder(params);
-    output(mode, orderConfirmation);
+    output(mode, [orderConfirmation]);
     return orderConfirmation;
 }
 

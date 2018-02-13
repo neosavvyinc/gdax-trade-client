@@ -5,10 +5,10 @@
   "main": "index.js",
   "dependencies": {
     "aigle": "^1.10.1",
-    "commander": "^2.13.0",
+    "commander": "^2.14.1",
     "easy-table": "^1.1.1",
     "gdax": "^0.5.1",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.5"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

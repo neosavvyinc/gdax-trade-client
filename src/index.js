@@ -104,15 +104,24 @@ function determineOutputMode() {
     }
 }
 
-function getAuthenticatedClient() {
+function getAuthenticatedClient(base = false) {
     const credentials = getCredentials();
     if(credentials.key && credentials.secret && credentials.passphrase) {
-        return new ExtendedClient(
-            credentials.key,
-            credentials.secret,
-            credentials.passphrase,
-            determineURI()
-        );
+        if(base) {
+            return new Gdax.AuthenticatedClient(
+                credentials.key,
+                credentials.secret,
+                credentials.passphrase,
+                determineURI()
+            );
+        } else {
+            return new ExtendedClient(
+                credentials.key,
+                credentials.secret,
+                credentials.passphrase,
+                determineURI()
+            );
+        }
     } else {
         console.log("You must provide an auth-file or key, secret, and passphrase parameters");
         commander.help();
@@ -175,13 +184,13 @@ if(commander.cancel) {
     let currencyPair = commander.cancel;
     switch(currencyPair) {
         case "ALL":
-            gdax.cancelAllOrders(authedClient, determineOutputMode());
+            gdax.cancelAllOrders(getAuthenticatedClient(true), determineOutputMode());
             break;
         case "BTC-USD":
         case "BCH-USD":
         case "ETH-USD":
         case "LTC-USD":
-            gdax.cancelForProduct(authedClient, currencyPair, determineOutputMode());
+            gdax.cancelForProduct(getAuthenticatedClient(true), currencyPair, determineOutputMode());
             break;
         default:
             console.log("Please provide a selection");
@@ -269,7 +278,7 @@ if(
     const entryPrice = Number(commander.entryPrice).toFixed(5);
     const exitPrice = Number(commander.exitPrice).toFixed(5);
 
-    const buyPrices = math.calculatePricesForScale(Number(entryPrice), Number(entryPrice) * 0.999, logScale, math.log10Form);
+    const buyPrices = math.calculatePricesForScale(Number(entryPrice), Number(entryPrice) * 0.9775, logScale, math.log10Form);
     const sellPrices = math.calculatePricesForScale(Number(exitPrice), Number(exitPrice) * 1.005, logScale, math.log10Form);
 
     const buyParams = {
