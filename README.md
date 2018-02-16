@@ -33,18 +33,18 @@ Recommandation is to save your production auth file as `your_name.json` and your
 
 Invoking the command is very easy and follows at a minimum the following for each command. 
 
-`node src/index.js --auth-file your_name.sandbox.json --list products`
+`node src/trade.js --auth-file your_name.sandbox.json --list products`
 
 The above command supports listing all the products in the default JSON output format. If you prefer a more friendly format in the console try the tabular format.
 
-`node src/index.js --auth-file your_name.sandbox.json --list products --table`
+`node src/trade.js --auth-file your_name.sandbox.json --list products --table`
 
 ### Account Information Commands
 
 Show your balances at Coinbase and GDAX
 
-`node src/index.js --auth-file your_name.sandbox.json --list coinbase-accounts --table`   
-`node src/index.js --auth-file your_name.sandbox.json --list gdax-accounts --table`
+`node src/trade.js --auth-file your_name.sandbox.json --list coinbase-accounts --table`   
+`node src/trade.js --auth-file your_name.sandbox.json --list gdax-accounts --table`
 
 ### Order Management Commands
 
@@ -53,29 +53,29 @@ Additionally all orders are placed as Limit Orders only as Maker Orders to avoid
 
 View Your Open Orders
 
-`node src/index.js --auth-file your_name.sandbox.json --list orders --table`    
+`node src/trade.js --auth-file your_name.sandbox.json --list orders --table`    
 
 Cancel All Orders
 
-`node src/index.js --auth-file your_name.sandbox.json --cancel ALL --table`
+`node src/trade.js --auth-file your_name.sandbox.json --cancel ALL --table`
 
 Cancel All Active Orders By Product
     
-`node src/index.js --auth-file your_name.sandbox.json --cancel ETH-USD --table`
+`node src/trade.js --auth-file your_name.sandbox.json --cancel ETH-USD --table`
 
 Place an Order as a Buy Side Limit Order
 
-`node src/index.js --auth-file adam_parrish.sandbox.json --buy-limit BTC-USD --amount 1 --limit-price 900`
+`node src/trade.js --auth-file adam_parrish.sandbox.json --buy-limit BTC-USD --amount 1 --limit-price 900`
 
 Place an Order as a Sell Side Limit Order
 
-`node src/index.js --auth-file adam_parrish.sandbox.json --sell-limit BTC-USD --amount 1 --limit-price 1900`
+`node src/trade.js --auth-file adam_parrish.sandbox.json --sell-limit BTC-USD --amount 1 --limit-price 1900`
 
 
 ### Accesing GDAX - For Real
 
 When you are ready to access the real production / non-sandbox you have to provide a real production auth-file and the `-r` flag like this
 
-`node src/index.js --auth-file adam_parrish.json --buy-limit BTC-USD --amount 1 --limit-price 900 -r`
+`node src/trade.js --auth-file adam_parrish.json --buy-limit BTC-USD --amount 1 --limit-price 900 -r`
 
 The above command will submit a REAL limit order to GDAX

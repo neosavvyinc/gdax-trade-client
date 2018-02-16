@@ -31,6 +31,7 @@
   },
   "homepage": "https://github.com/neosavvyinc/gdax-trade-client#readme",
   "bin": {
-    "gtrade": "./src/index.js"
+    "gtrade": "./src/trade.js",
+    "gmon": "./src/monitor.cmd.js"
   }
 }
