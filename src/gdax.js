@@ -40,7 +40,7 @@ async function listGdaxAccounts(client, mode = 'json', ignoreUsd = false) {
                 return usdResult
             }
         });
-        output(mode, accountsWithUSDValues, "dollarValue");
+        output(mode, accountsWithUSDValues, "dollarValue", ["id", "profile_id", ]);
     } catch (error) {
         console.log(error);
     }

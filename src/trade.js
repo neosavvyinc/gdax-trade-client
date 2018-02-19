@@ -75,6 +75,10 @@ commander.version('0.1.0')
         'Entry Threshold')
     .option('--exit-price <exitPrice>',
         'Exit Threshold ')
+    .option('--lower-bound <lowerBound>',
+        'Lower Bound Threshold ')
+    .option('--upper-bound <upperBound>',
+        'Upper Bound ')
     .option('--logarithmic-steps <steps>', 'Scale logarithmically this number of times', 1)
 	.parse(process.argv);
 
@@ -219,9 +223,11 @@ if(
     const buySourceAmount = commander.buySourceAmount;
     const entryPrice = Number(commander.entryPrice).toFixed(5);
     const exitPrice = Number(commander.exitPrice).toFixed(5);
+    const lowerBound = commander.lowerBound ? Number(commander.lowerBound) : 0.9775;
+    const upperBound = commander.upperBound ? Number(commander.upperBound) : 1.005;
 
-    const buyPrices = math.calculatePricesForScale(Number(entryPrice), Number(entryPrice) * 0.9775, logScale, math.log10Form);
-    const sellPrices = math.calculatePricesForScale(Number(exitPrice), Number(exitPrice) * 1.005, logScale, math.log10Form);
+    const buyPrices = math.calculatePricesForScale(Number(entryPrice), Number(entryPrice) * lowerBound, logScale, math.log10Form);
+    const sellPrices = math.calculatePricesForScale(Number(exitPrice), Number(exitPrice) * upperBound, logScale, math.log10Form);
 
     const buyParams = {
         side: 'buy',
