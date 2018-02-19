@@ -4,6 +4,7 @@ const commander = require('commander');
 
 const fs = require('fs');
 const gdax = require('./gdax');
+const MetricsDAO = require('./metrics_data.dao');
 const Gdax = require('gdax');
 const ExtendedClient = require('./authenticated');
 const math = require('./math');
@@ -77,6 +78,18 @@ function monitorPrice(product, authedClient) {
     websocket.on('message', (data) => {
         if(data.type === "ticker") {
             output('table', [data]);
+            MetricsDAO.savePriceInfo({
+                product_id: data.product_id,
+                price: data.price,
+                open_24h: data.open_24h,
+                volume_24h: data.volume_24h,
+                low_24h: data.low_24h,
+                high_24h: data.high_24h,
+                volume_30d: data.volume_30d,
+                best_bid: data.best_bid,
+                best_ask: data.best_ask,
+                time: data.time
+            })
         }
     });
 }
