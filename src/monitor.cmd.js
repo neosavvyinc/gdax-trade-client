@@ -40,7 +40,7 @@ const { output } = require('./logging.util');
     .option('--json', 'JSON Output Mode')
 
     .option('-m --monitor <product>', 'Product ID to Monitor', /^(BTC-USD|BCH-USD|ETH-USD|LTC-USD)/i)
-    .option('-d --data <point>', 'Data Point Type to Capture', /^(price|trade|portfolio)/i)
+    .option('-d --data <point>', 'Data Point Type to Capture', /^(price|portfolio)/i)
     .parse(process.argv);
 
 
@@ -56,8 +56,10 @@ if(commander.monitor && commander.data) {
             monitorPrice(product,
                 AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile));
             break;
-        case "trade":
-            console.log(`Monitoring Trades for ${product}`);
+        case "portfolio":
+            console.log(`Monitoring Portfolio`);
+            monitorPortfolio(product,
+                AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile));
             break;
         default:
             commander.help();
@@ -96,7 +98,7 @@ function monitorPrice(product, authedClient) {
 
 function monitorPortfolio(product, authedClient) {
     const websocket = new Gdax.WebsocketClient(
-        [product],
+        ['BTC-USD', 'ETH-USD', 'BCH-USD', 'LTC-USD'],
         'wss://ws-feed.gdax.com', // FIXME: Make this work for real/fake
         authedClient,
         {
@@ -104,9 +106,43 @@ function monitorPortfolio(product, authedClient) {
         }
     );
 
-    websocket.on('message', (data) => {
+    const calculatePortfolioBalance = (priceTickInfo, accounts, ignoreUsd = false) => {
+        const accountsWithUSDValues = _.map(accounts, (a) => {
+            if( a.currency !== 'USD' ) {
+                const nonUsdResult = _.merge({}, a, {dollarValue: Number(a.balance) * Number(priceTickInfo.price)});
+                return nonUsdResult
+            } else if ( a.currency === 'USD' && !ignoreUsd) {
+                const usdResult = _.merge({}, a, {dollarValue: Number(a.balance)});
+                return usdResult;
+            } else {
+                const usdResult = _.merge({}, a, {dollarValue: 0});
+                return usdResult
+            }
+        });
+        return accountsWithUSDValues;
+    };
+
+    websocket.on('message', async (data) => {
         if(data.type === "ticker") {
-            output('table', [data]);
+            const shapeOfPriceTick = [
+                "product_id",
+                "price",
+                "open_24h",
+                "volume_24h",
+                "low_24h",
+                "high_24h",
+                "volume_30d",
+                "best_bid",
+                "best_ask",
+                "time"
+            ];
+            if(_.every(shapeOfPriceTick, _.partial(_.has, data))){
+                const accounts = await authedClient.getAccounts();
+                const portfolioInfo = calculatePortfolioBalance(accounts);
+                console.log("Accounts: ", portfolioInfo);
+                MetricsDAO.savePortfolioInfo(portfolioInfo);
+            }
+
         }
     });
 }

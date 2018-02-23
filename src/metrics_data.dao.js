@@ -40,6 +40,37 @@ async function savePriceInfo(priceInfo) {
 
 }
 
+async function savePortfolioInfo(portfolioInfo) {
+    console.log(`Saving portfolio for price tick: ${JSON.stringify(portfolioInfo)}`);
+    console.log("portfolioInfoTime: ", portfolioInfo.time);
+    const client = await pool.connect();
+
+    try {
+        const { priceInfoRows } = await client.query(
+            'INSERT INTO portfolio_history(' +
+            'dollar_value, btc_value, eth_value, ltc_value, bch_value, timestamp, total_value) ' +
+            'VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [
+                portfolioInfo.dollar_value,
+                portfolioInfo.btc_value,
+                portfolioInfo.eth_value,
+                portfolioInfo.ltc_value,
+                portfolioInfo.bch_value,
+                new Date(portfolioInfo.time),
+                portfolioInfo.total_value
+            ]
+        );
+
+
+    } catch (e) {
+        console.log('Error executing insert of price info: ', e.stack);
+    } finally {
+        client.release();
+    }
+
+}
+
 module.exports = {
-    savePriceInfo
+    savePriceInfo,
+    savePortfolioInfo
 };
