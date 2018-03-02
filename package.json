@@ -9,7 +9,9 @@
     "easy-table": "^1.1.1",
     "gdax": "^0.5.1",
     "lodash": "^4.17.5",
-    "pg": "^7.4.1"
+    "moment": "^2.20.1",
+    "pg": "^7.4.1",
+    "twix": "^1.2.1"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
