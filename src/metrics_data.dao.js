@@ -1,4 +1,5 @@
-const { Pool, Client } = require('pg')
+const { Pool, Client } = require('pg');
+const moment = require('moment');
 
 const pool = Pool({
     user: 'trademon',
@@ -40,6 +41,37 @@ async function savePriceInfo(priceInfo) {
 
 }
 
+async function saveHourly(priceInfo) {
+    const client = await pool.connect();
+
+    try {
+        // await client.query('BEGIN');
+        console.log("inserting: ", moment.unix(priceInfo.time).toDate())
+        const { priceInfoRows } = await client.query(
+            'INSERT INTO hourly_candles(product_id, open_price, close_price, volume, low, high, time) ' +
+            'VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [
+                priceInfo.product_id,
+                priceInfo.open,
+                priceInfo.close,
+                priceInfo.volume,
+                priceInfo.low,
+                priceInfo.high,
+                moment.unix(priceInfo.time).toDate()
+            ]
+        );
+
+
+    } catch (e) {
+        console.log('Error executing insert of price info: ', e.stack);
+        throw e
+    } finally {
+        client.release();
+    }
+
+}
+
+
 async function savePortfolioInfo(portfolioInfo) {
     console.log(`Saving portfolio for price tick: ${JSON.stringify(portfolioInfo)}`);
     console.log("portfolioInfoTime: ", portfolioInfo.time);
@@ -72,5 +104,6 @@ async function savePortfolioInfo(portfolioInfo) {
 
 module.exports = {
     savePriceInfo,
-    savePortfolioInfo
+    savePortfolioInfo,
+    saveHourly
 };

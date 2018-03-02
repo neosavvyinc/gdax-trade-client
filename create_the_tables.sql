@@ -83,6 +83,17 @@ CREATE TABLE price_history (
 );
 
 
+CREATE TABLE hourly_candles (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    product_id character(7) NOT NULL,
+    open_price double precision NOT NULL,
+	close_price double precision NOT NULL,
+    volume double precision NOT NULL,
+    low double precision NOT NULL,
+    high double precision NOT NULL,
+    "time" timestamp with time zone NOT NULL
+);
+
 --
 -- Name: portfolio_history portfolio_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
