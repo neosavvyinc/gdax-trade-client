@@ -9,6 +9,7 @@ const Gdax = require('gdax');
 const ExtendedClient = require('./util/authenticated');
 const math = require('./util/math');
 const _ = require('lodash');
+const pjson = require('../package.json');
 
 const {
     PRODUCT_ID_REGEX
@@ -17,7 +18,7 @@ const {
 const AuthUtils = require('./util/authentication.util');
 const { output } = require('./util/logging.util');
 
-    commander.version('0.1.0')
+    commander.version(pjson.version)
 
     /**
      * Sandbox is default environment without this flag - safety first!

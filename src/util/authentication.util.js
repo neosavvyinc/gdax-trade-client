@@ -14,7 +14,8 @@ function determineURI(real = false) {
 }
 
 function getAuthenticatedClient(base = false, real = false, authFile) {
-    const credentials = getCredentials(authFile);
+    const configFile = getCredentials(authFile);
+    const credentials = configFile && configFile.gdax ? configFile.gdax : {};
     if(credentials.key && credentials.secret && credentials.passphrase) {
         if(base) {
             return new Gdax.AuthenticatedClient(

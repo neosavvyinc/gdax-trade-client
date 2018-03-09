@@ -4,10 +4,11 @@ const commander = require('commander');
 const gdax = require('./api/gdax');
 const math = require('./util/math');
 const _ = require('lodash');
+const pjson = require('../package.json');
 
 const AuthUtils = require('./util/authentication.util');
 
-commander.version('0.1.0')
+commander.version(pjson.version)
     /**
      * Sandbox is default environment without this flag - safety first!
      */

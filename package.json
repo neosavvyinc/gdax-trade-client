@@ -1,10 +1,11 @@
 {
   "name": "gdax-trade-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Trading Client for GDAX Trade Monitoring",
   "main": "index.js",
   "dependencies": {
     "aigle": "^1.10.1",
+    "aws-sdk": "^2.207.0",
     "commander": "^2.14.1",
     "easy-table": "^1.1.1",
     "gdax": "^0.5.1",
@@ -36,6 +37,7 @@
   "bin": {
     "gtrade": "./src/trade.cmd.js",
     "gmon": "./src/monitor.cmd.js",
-    "gimport": "./src/importer.cmd.js"
+    "gimport": "./src/importer.cmd.js",
+    "galert": "./src/alert.cmd.js"
   }
 }

@@ -73,7 +73,7 @@ function executeTwoLegTrade(
     const websocket = new Gdax.WebsocketClient(
         [product],
         'wss://ws-feed.gdax.com',
-        auth,
+        auth.gdax,
         {
             channels: ['ticker']
         }
