@@ -1,5 +1,14 @@
 {
-  "key": "yourKey",
-  "secret": "yourSecret",
-  "passphrase": "yourPass"
+  "gdax": {
+    "key": "yourKey",
+    "secret": "yourSecret",
+    "passphrase": "yourPass"
+  },
+  "alerts": {
+    "phoneNumber": "19998883344",
+    "sns": {
+      "accessKey": "yourAWS_SNS_KEY",
+      "secret": "yourAWS_SNS_SECRET"
+    }
+  }
 }
