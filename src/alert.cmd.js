@@ -20,6 +20,10 @@ const {
 const AuthUtils = require('./util/authentication.util');
 const { output } = require('./util/logging.util');
 
+function list(val) {
+    return val.split(',');
+}
+
 let config;
 
     commander.version(pjson.version)
@@ -45,8 +49,8 @@ let config;
     .option('--json', 'JSON Output Mode')
 
     .option('-a --alert <product>', 'Product ID to Monitor', /^(BTC-USD|BCH-USD|ETH-USD|LTC-USD)/i)
-    .option('-d --decreasing <decreasing>', 'Decreasing Threshold', parseInt)
-    .option('-i --increasing <increasing>', 'Increasing Threshold', parseInt)
+    .option('-d --decreasing <decreasing>', 'Decreasing Threshold', list)
+    .option('-i --increasing <increasing>', 'Increasing Threshold', list)
     .parse(process.argv);
 
 if(commander.authFile) {
@@ -55,37 +59,42 @@ if(commander.authFile) {
 
 if(commander.alert && commander.decreasing) {
     const product = commander.alert;
-    const decreasingThreshold = commander.decreasing;
+    const decreasingThresholds = commander.decreasing;
 
-    console.log(`Monitoring ${decreasingThreshold} for ${product}`);
+    console.log(`Monitoring ${commander.decreasing} for ${product}`);
 
     monitorPrice(product,
         AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile),
-        (price, rawData) => {
-            if (price < decreasingThreshold) {
-                sendAlert(`${product} just dropped below ${decreasingThreshold} better go trade!`);
-            } else {
-                output('table', [rawData]);
+        _.map(decreasingThresholds, (decreasingThreshold) => {
+            console.log("creating monitor decreasing function: ", decreasingThreshold);
+            return (price, rawData) => {
+                if (price < decreasingThreshold) {
+                    sendAlert(`${product} just dropped below ${decreasingThreshold} better go trade!`);
+                } else {
+                    output('table', [rawData]);
+                }
             }
-        }
+        })
     );
 }
 
 if(commander.alert && commander.increasing) {
     const product = commander.alert;
-    const increasingThreshold = commander.increasing;
+    const increasingThresholds = commander.increasing;
 
-    console.log(`Monitoring ${increasingThreshold} for ${product}`);
+    console.log(`Monitoring ${commander.increasing} for ${product}`);
 
     monitorPrice(product,
         AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile),
-        (price, rawData) => {
-            if (price > increasingThreshold) {
-                sendAlert(`${product} just traded above ${increasingThreshold} better go trade!`);
-            } else {
-                output('table', [rawData]);
+        _.map(increasingThresholds, (increasingThreshold) => {
+            return (price, rawData) => {
+                if (price > increasingThreshold) {
+                    sendAlert(`${product} just traded above ${increasingThreshold} better go trade!`);
+                } else {
+                    output('table', [rawData]);
+                }
             }
-        }
+        })
     );
 }
 
@@ -121,7 +130,7 @@ function sendAlert(message) {
     }
 }
 
-function monitorPrice(product, authedClient, priceCheck) {
+function monitorPrice(product, authedClient, priceCheckFunctions) {
     const websocket = new Gdax.WebsocketClient(
         [product],
         'wss://ws-feed.gdax.com', // FIXME: Make this work for real/fake
@@ -133,7 +142,11 @@ function monitorPrice(product, authedClient, priceCheck) {
 
     websocket.on('message', (data) => {
         if(data.type === "ticker") {
-            priceCheck(data.price, data);
+            console.log('price tick: ', data);
+            _.forEach(priceCheckFunctions, (f) => {
+                console.log('f: ', f);
+                f(data.price, data);
+            });
         }
     });
 }
