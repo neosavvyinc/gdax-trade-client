@@ -71,6 +71,24 @@ if(commander.alert && commander.decreasing) {
     );
 }
 
+if(commander.alert && commander.increasing) {
+    const product = commander.alert;
+    const increasingThreshold = commander.increasing;
+
+    console.log(`Monitoring ${increasingThreshold} for ${product}`);
+
+    monitorPrice(product,
+        AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile),
+        (price, rawData) => {
+            if (price > increasingThreshold) {
+                sendAlert(`${product} just traded above ${increasingThreshold} better go trade!`);
+            } else {
+                output('table', [rawData]);
+            }
+        }
+    );
+}
+
 let ignoreAlerts = false;
 function sendAlert(message) {
     console.log("message ", message);
