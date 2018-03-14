@@ -1,4 +1,4 @@
-#!/usr/bin/env node --harmony
+#!/usr/bin/env node
 
 const commander = require('commander');
 const AWS = require('aws-sdk');
