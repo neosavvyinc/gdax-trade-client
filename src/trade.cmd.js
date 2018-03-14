@@ -7,6 +7,7 @@ const _ = require('lodash');
 const pjson = require('../package.json');
 
 const AuthUtils = require('./util/authentication.util');
+const { output, determineOutputMode } = require('./util/logging.util');
 
 commander.version(pjson.version)
     /**
@@ -24,7 +25,7 @@ commander.version(pjson.version)
      */
     .option('-l --list <type>',
         'List By Object Type',
-        /^(coinbase-accounts|orders|products|gdax-accounts|positions|cost-basis)$/i)
+        /^(coinbase-accounts|orders|products|gdax-accounts|positions)$/i)
     .option('--ignore-usd')
 
     /**
@@ -84,37 +85,23 @@ commander.version(pjson.version)
 	.parse(process.argv);
 
 
-function determineOutputMode() {
-    if(commander.table) {
-        return 'table';
-    } else if ( commander.json ) {
-        return 'json';
-    } else {
-        return 'json';
-    }
-}
-
-
 const authedClient = AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile);
 if(commander.list) {
     switch (commander.list) {
         case "coinbase-accounts":
-            gdax.listCoinbaseAccounts(authedClient, determineOutputMode());
+            gdax.listCoinbaseAccounts(authedClient, determineOutputMode(commander));
             break;
         case "gdax-accounts":
-            gdax.listGdaxAccounts(authedClient, determineOutputMode(), commander.ignoreUsd);
+            gdax.listGdaxAccounts(authedClient, determineOutputMode(commander), commander.ignoreUsd);
             break;
         case "orders":
-            gdax.listOrders(authedClient, determineOutputMode());
+            gdax.listOrders(authedClient, determineOutputMode(commander));
             break;
         case "products":
-            gdax.listProducts(authedClient, determineOutputMode());
+            gdax.listProducts(authedClient, determineOutputMode(commander));
             break;
         case "positions":
-            gdax.listPositions(authedClient, determineOutputMode());
-            break;
-        case "cost-basis":
-            gdax.listCostBasis(authedClient, determineOutputMode());
+            gdax.listPositions(authedClient, determineOutputMode(commander));
             break;
     }
 }
@@ -126,7 +113,7 @@ if(commander.cancel) {
         case "ALL":
             gdax.cancelAllOrders(
                 AuthUtils.getAuthenticatedClient(true, commander.real, commander.authFile),
-                determineOutputMode()
+                determineOutputMode(commander)
             );
             break;
         case "BTC-USD":
@@ -136,7 +123,7 @@ if(commander.cancel) {
             gdax.cancelForProduct(
                 AuthUtils.getAuthenticatedClient(true, commander.real, commander.authFile),
                 currencyPair,
-                determineOutputMode()
+                determineOutputMode(commander)
             );
             break;
         default:
@@ -162,7 +149,7 @@ if(commander.buyLimit) {
             commander.buyLimit,
             calculatedAmount,
             commander.limitPrice,
-            determineOutputMode())
+            determineOutputMode(commander))
     } else {
         console.log("Submitting a BUY order for");
         console.log("Currency:    ", commander.buyLimit);
@@ -175,7 +162,7 @@ if(commander.buyLimit) {
             commander.buyLimit,
             commander.amount,
             commander.limitPrice,
-            determineOutputMode())
+            determineOutputMode(commander))
     }
 }
 
@@ -193,7 +180,7 @@ if(commander.sellLimit) {
             commander.sellLimit,
             calculatedAmount,
             commander.limitPrice,
-            determineOutputMode());
+            determineOutputMode(commander));
     } else {
         console.log("Submitting a SELL order for");
         console.log("Currency:    ", commander.sellLimit);
@@ -206,7 +193,7 @@ if(commander.sellLimit) {
             commander.sellLimit,
             commander.amount,
             commander.limitPrice,
-            determineOutputMode());
+            determineOutputMode(commander));
     }
 }
 
@@ -275,5 +262,5 @@ if(
         }
     });
 
-    gdax.output(determineOutputMode(), orders, "profit");
+    gdax.output(determineOutputMode(commander), orders, "profit");
 }

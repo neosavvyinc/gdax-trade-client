@@ -33,6 +33,17 @@ function output(mode, data, sumColumn, omitColumns) {
     }
 }
 
+function determineOutputMode(commander) {
+    if(commander.table) {
+        return 'table';
+    } else if ( commander.json ) {
+        return 'json';
+    } else {
+        return 'json';
+    }
+}
+
 module.exports = {
-    output
+    output,
+    determineOutputMode
 };

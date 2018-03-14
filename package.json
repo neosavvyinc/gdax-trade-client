@@ -38,6 +38,7 @@
     "gtrade": "./src/trade.cmd.js",
     "gmon": "./src/monitor.cmd.js",
     "gimport": "./src/importer.cmd.js",
-    "galert": "./src/alert.cmd.js"
+    "galert": "./src/alert.cmd.js",
+    "gcalc": "./src/calculate.cmd.js"
   }
 }

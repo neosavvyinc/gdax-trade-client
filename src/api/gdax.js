@@ -18,7 +18,7 @@ async function listProducts(client, mode = 'json') {
 async function listCoinbaseAccounts(client, mode = 'json') {
     try {
         const accounts = await client.getCoinbaseAccounts();
-        output(mode, accounts);
+        output(mode, accounts, undefined, ['id', 'primary', 'active', 'wire_deposit_information']);
     } catch (error) {
         console.log(error);
     }
@@ -89,7 +89,7 @@ function executeTwoLegTrade(
                     output('table', [buyOrderId]);
                     buyMode = false;
                 } else {
-                    if(!monitorSellMode) {
+                    if(!monitorSellMode && buyOrderId && buyOrderId.id) {
                         const buyOrder = await client.getOrder(buyOrderId.id);
                         if(buyOrder.status === "rejected") {
                             console.log("Failed to buy at params");
@@ -172,7 +172,7 @@ async function listPositions(client, mode = 'json') {
     output(mode, positions.accounts);
 }
 
-async function listCostBasis(client, mode = 'json') {
+async function listCostBasis(client, mode = 'json', product) {
     const accounts = await client.getAccounts();
 
     // { currency: 'BTC', trades: [] }
