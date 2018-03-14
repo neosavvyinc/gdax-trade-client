@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env node --harmony
 
 const commander = require('commander');
 const AWS = require('aws-sdk');
@@ -57,44 +57,37 @@ if(commander.authFile) {
     config = AuthUtils.getCredentials(commander.authFile);
 }
 
-if(commander.alert && commander.decreasing) {
+if(commander.alert && (commander.decreasing || commander.increasing)) {
     const product = commander.alert;
-    const decreasingThresholds = commander.decreasing;
+    const decreasingThresholds = commander.decreasing || [];
+    const increasingThresholds = commander.increasing || [];
+
+    const decreasingFunctions = _.map(decreasingThresholds, (decreasingThreshold) => {
+        console.log("creating monitor decreasing function: ", decreasingThreshold);
+        return (price, rawData) => {
+            if (parseFloat(price) <= parseFloat(decreasingThreshold)) {
+                sendAlert(`${product} just dropped below ${decreasingThreshold} better go trade!`);
+            } else {
+                output('table', [rawData]);
+            }
+        }
+    });
+
+    const increasingFunctions = _.map(increasingThresholds, (increasingThreshold) => {
+        return (price, rawData) => {
+            if (parseFloat(price) >= parseFloat(increasingThreshold)) {
+                sendAlert(`${product} just traded above ${increasingThreshold} better go trade!`);
+            } else {
+                output('table', [rawData]);
+            }
+        }
+    });
 
     console.log(`Monitoring ${commander.decreasing} for ${product}`);
-
-    monitorPrice(product,
-        AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile),
-        _.map(decreasingThresholds, (decreasingThreshold) => {
-            console.log("creating monitor decreasing function: ", decreasingThreshold);
-            return (price, rawData) => {
-                if (price < decreasingThreshold) {
-                    sendAlert(`${product} just dropped below ${decreasingThreshold} better go trade!`);
-                } else {
-                    output('table', [rawData]);
-                }
-            }
-        })
-    );
-}
-
-if(commander.alert && commander.increasing) {
-    const product = commander.alert;
-    const increasingThresholds = commander.increasing;
-
     console.log(`Monitoring ${commander.increasing} for ${product}`);
-
     monitorPrice(product,
         AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile),
-        _.map(increasingThresholds, (increasingThreshold) => {
-            return (price, rawData) => {
-                if (price > increasingThreshold) {
-                    sendAlert(`${product} just traded above ${increasingThreshold} better go trade!`);
-                } else {
-                    output('table', [rawData]);
-                }
-            }
-        })
+        decreasingFunctions.concat(increasingFunctions)
     );
 }
 
@@ -142,9 +135,7 @@ function monitorPrice(product, authedClient, priceCheckFunctions) {
 
     websocket.on('message', (data) => {
         if(data.type === "ticker") {
-            console.log('price tick: ', data);
             _.forEach(priceCheckFunctions, (f) => {
-                console.log('f: ', f);
                 f(data.price, data);
             });
         }
