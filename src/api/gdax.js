@@ -174,50 +174,66 @@ async function listPositions(client, mode = 'json') {
 
 async function listCostBasis(client, mode = 'json', product) {
     const accounts = await client.getAccounts();
+    const positions = await client.listPositions();
+    let productPosition = parseFloat(positions.accounts[product].balance);
 
-    // { currency: 'BTC', trades: [] }
-    const tradesByAccount = await Aigle.map(accounts, async (a) => {
-        const accountHistory = await client.getAccountHistory(a.id);
+    if(productPosition) {
 
-        const trades = _.reduce(accountHistory, (acc, ah) => {
-            if(ah.type === 'match') {
-                acc = acc.concat(ah)
-            }
-            return acc;
-        }, []);
-        return { currency: a.currency, trades }
-    });
+        const tradesByAccount = await Aigle.map(accounts, async (a) => {
+            const accountHistory = await client.getAccountHistory(a.id);
 
-    const usdInformation = _.find(tradesByAccount, {currency: "USD"});
-    const usdLookupInfo = _.map(usdInformation.trades, (t) => {
-        const info = {
-            tradeId: t.details.trade_id,
-            currencyPair: t.details.product_id,
-            usdAmount: t.amount,
-            orderType: t.amount > 0 ? 'sell' : 'buy'
-        };
-        return info;
-    });
-
-    _.forEach(tradesByAccount, (t) => {
-        if(t.currency !== 'USD'){
-
-            const tradesWithInfo = _.map(t.trades, (trade) => {
-                const foundTrade = _.find(usdLookupInfo, {tradeId: trade.details.trade_id});
-                const usdAmount = foundTrade ? foundTrade.usdAmount: 0;
-                return {
-                    ...trade,
-                    usdCost: Math.abs(usdAmount),
-                    [`${_.toLower(t.currency)}Limit`]: Math.abs(usdAmount / Number(trade.amount))
+            const trades = _.reduce(accountHistory, (acc, ah) => {
+                if(ah.type === 'match') {
+                    acc = acc.concat(ah)
                 }
-            });
-            const usdCosts = _.map(tradesWithInfo, (twi) => { return Number(twi.usdCost)});
-            const currencyAmounts =  _.map(tradesWithInfo, (twi) => { return Number(twi.amount)});
-            const costBasis = _.sum(usdCosts) / _.sum(currencyAmounts);
-            console.log(`Cost Basis for ${t.currency}: ${costBasis}`);
-            output(mode, tradesWithInfo);
-        }
-    });
+                return acc;
+            }, []);
+            return { currency: a.currency, trades }
+        });
+
+        const usdInformation = _.find(tradesByAccount, {currency: "USD"});
+        const usdLookupInfo = _.map(usdInformation.trades, (t) => {
+            const info = {
+                tradeId: t.details.trade_id,
+                currencyPair: t.details.product_id,
+                usdAmount: t.amount,
+                orderType: t.amount > 0 ? 'sell' : 'buy'
+            };
+            return info;
+        });
+
+        _.forEach(tradesByAccount, (t) => {
+            if(t.currency == product){
+                const tradesWithInfo = _.map(t.trades, (trade) => {
+                    const foundTrade = _.find(usdLookupInfo, {tradeId: trade.details.trade_id});
+                    const usdAmount = foundTrade ? foundTrade.usdAmount: 0;
+                    return {
+                        ...trade,
+                        usdCost: Math.abs(usdAmount),
+                        [`${_.toLower(t.currency)}Limit`]: Math.abs(usdAmount / Number(trade.amount))
+                    }
+                });
+                const relevantTrades = _.filter(tradesWithInfo, (twi) => {
+                    if(productPosition <= 0 ) {
+                        return false
+                    } else {
+                        productPosition = productPosition - parseFloat(twi.amount);
+                        return true;
+                    }
+                });
+
+                const usdCosts = _.map(relevantTrades, (twi) => { return Number(twi.usdCost)});
+                const currencyAmounts =  _.map(relevantTrades, (twi) => { return Number(twi.amount)});
+                const costBasis = _.sum(usdCosts) / _.sum(currencyAmounts);
+                console.log(`\nEstimated cost basis: $${costBasis}\n`);
+                output(mode, relevantTrades, "usdCost", ["details", "type", "id"]);
+            }
+        });
+    }
+    else {
+        throw new Error(`No Position for ${product}`);
+    }
+
 }
 
 module.exports = {

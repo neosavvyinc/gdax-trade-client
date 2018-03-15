@@ -55,5 +55,5 @@ if(commander.authFile) {
 
 if(commander.costBasis) {
     const product = commander.costBasis;
-    gdax.listCostBasis(authedClient, determineOutputMode(commander))
+    gdax.listCostBasis(authedClient, determineOutputMode(commander), product);
 }
