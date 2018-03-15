@@ -1,6 +1,6 @@
 {
   "name": "gdax-trade-client",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "Trading Client for GDAX Trade Monitoring",
   "main": "index.js",
   "dependencies": {

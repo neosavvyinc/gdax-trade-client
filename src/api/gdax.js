@@ -82,11 +82,17 @@ function executeTwoLegTrade(
     websocket.on('message', async (data) => {
         try {
             if(data.type === 'ticker') {
+                if(buyMode) {
+                    console.log("Buy Order Execution Report");
+                }
+
                 if(buyMode && !orderSubmitted) {
-                    console.log(`Found Entry Price, submitting order at ${entryTradeParams.price}`);
                     orderSubmitted = true;
                     buyOrderId = await client.placeOrder(entryTradeParams);
-                    output('table', [buyOrderId]);
+                    output('table',
+                        [buyOrderId],
+                        undefined,
+                        ['stp', 'type', 'post_only', 'created_at', 'fill_fees', 'filled_size', 'executed_value', 'status', 'settled']);
                     buyMode = false;
                 } else {
                     if(!monitorSellMode && buyOrderId && buyOrderId.id) {
@@ -97,7 +103,10 @@ function executeTwoLegTrade(
                         if(buyOrder.settled === true && !sellOrderSubmitted) {
                             sellOrderSubmitted = true;
                             sellOrderId = await client.placeOrder(exitTradeParams);
-                            output('table', [sellOrderId]);
+                            output('table',
+                                [sellOrderId],
+                                undefined,
+                                ['stp', 'type', 'post_only', 'created_at', 'fill_fees', 'filled_size', 'executed_value', 'status', 'settled']);
                             monitorSellMode = true;
                         }
                     } else {
