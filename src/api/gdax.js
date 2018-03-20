@@ -18,7 +18,7 @@ async function listProducts(client, mode = 'json') {
 async function listCoinbaseAccounts(client, mode = 'json') {
     try {
         const accounts = await client.getCoinbaseAccounts();
-        output(mode, accounts, undefined, [ 'primary', 'active', 'wire_deposit_information']);
+        output(mode, accounts, undefined, ['id', 'primary', 'active', 'wire_deposit_information']);
     } catch (error) {
         console.log(error);
     }
@@ -58,18 +58,11 @@ async function listOrders(client, mode = 'json') {
 function executeTwoLegTrade(
         auth,
         client,
-        profit,
         product,
-        entryTradeParams,
-        exitTradeParams) {
+        tradePairs,
+        mode = 'json') {
 
-    let buyOrderId;
-    let sellOrderId;
-    let buyMode = true;
-    let monitorSellMode = false;
-    let orderSubmitted = false;
-    let sellOrderSubmitted = false;
-
+    let summary = false;
     const websocket = new Gdax.WebsocketClient(
         [product],
         'wss://ws-feed.gdax.com',
@@ -82,44 +75,72 @@ function executeTwoLegTrade(
     websocket.on('message', async (data) => {
         try {
             if(data.type === 'ticker') {
-                if(buyMode) {
-                    console.log("Buy Order Execution Report");
-                }
 
-                if(buyMode && !orderSubmitted) {
-                    orderSubmitted = true;
-                    buyOrderId = await client.placeOrder(entryTradeParams);
-                    output('table',
-                        [buyOrderId],
-                        undefined,
-                        ['stp', 'type', 'post_only', 'created_at', 'fill_fees', 'filled_size', 'executed_value', 'status', 'settled']);
-                    buyMode = false;
-                } else {
-                    if(!monitorSellMode && buyOrderId && buyOrderId.id) {
-                        const buyOrder = await client.getOrder(buyOrderId.id);
-                        if(buyOrder.status === "rejected") {
-                            console.log("Failed to buy at params");
-                        }
-                        if(buyOrder.settled === true && !sellOrderSubmitted) {
-                            sellOrderSubmitted = true;
-                            sellOrderId = await client.placeOrder(exitTradeParams);
-                            output('table',
-                                [sellOrderId],
-                                undefined,
-                                ['stp', 'type', 'post_only', 'created_at', 'fill_fees', 'filled_size', 'executed_value', 'status', 'settled']);
-                            monitorSellMode = true;
-                        }
+                const updatedTradePairs = await Aigle.map(tradePairs, async (pair) => {
+
+                    let buyOrderId = pair.buyOrderId;
+                    let sellOrderId = pair.sellOrderId;
+                    let buyMode = _.get(pair, "buyMode" , true);
+                    let monitorSellMode = _.get(pair, "monitorSellMode", false);
+                    let orderSubmitted = _.get(pair, "orderSubmitted", false);
+                    let sellOrderSubmitted = _.get(pair, "sellOrderSubmitted", false);
+
+                    if(_.isUndefined(pair.profit)) {
+                        const profit = (pair.sell.price * pair.sell.size) - (pair.buy.price * pair.buy.size);
+                        //console.log("Profit for order: ", profit);
+                        pair.profit = profit;
+                    }
+
+                    if(buyMode && !orderSubmitted) {
+                        console.log(`Found Entry Price, submitting order at ${pair.buy.price}`);
+                        pair.orderSubmitted = true;
+                        pair.buyOrderId = await client.placeOrder(pair.buy);
+                        //output('table', [pair.buyOrderId]);
+                        pair.buyMode = false;
                     } else {
-                        const sellOrder = await client.getOrder(sellOrderId.id);
-                        if(sellOrder.status === "rejected") {
-                            monitorSellMode = false;
-                            sellOrderSubmitted = false;
-                        }
-                        if(sellOrder.settled === true) {
-                            console.log(`Order by id: ${sellOrder.id} complete with $${profit} USD`);
+                        if(!monitorSellMode) {
+                            // console.log("Monitoring Sell Mode");
+                            // console.log("BuyOrderId: ", buyOrderId);
+                            if( !_.isUndefined(buyOrderId) && !_.isUndefined(buyOrderId.id))
+                            {
+                                const buyOrder = await client.getOrder(buyOrderId.id);
+                                if(buyOrder.status === "rejected") {
+                                    console.log("Failed to buy at params");
+                                }
+                                if(buyOrder.settled === true && !sellOrderSubmitted) {
+                                    console.log("Sending Sell Order");
+                                    pair.sellOrderSubmitted = true;
+                                    pair.sellOrderId = await client.placeOrder(pair.sell);
+                                    output(mode, [sellOrderId]);
+                                    pair.monitorSellMode = true;
+                                }
+                            }
+                        } else if (monitorSellMode) {
+                            if(!_.isUndefined(sellOrderId) && !_.isUndefined(sellOrderId.id)) {
+                                const sellOrder = await client.getOrder(sellOrderId.id);
+                                if (sellOrder.status === "rejected") {
+                                    pair.monitorSellMode = false;
+                                    pair.sellOrderSubmitted = false;
+                                }
+                                if (sellOrder.settled === true) {
+                                    console.log(`Order by id: ${sellOrder.id} complete with $${pair.profit} USD`);
+                                }
+                            }
+                        } else {
+                            console.log("Unhandled....");
                         }
                     }
+
+                    return pair;
+                });
+
+                // Functional no-no we are modifying the heck out of this state.
+                tradePairs = updatedTradePairs;
+                if(!summary) {
+                    output(mode, tradePairs, "profit", ["buyOrderId"]);
+                    summary = true;
                 }
+
             }
         } catch (error) {
             console.log("Error while obtaining order details on a ticker update: ", error);
@@ -223,6 +244,9 @@ async function listCostBasis(client, mode = 'json', product) {
                     }
                 });
                 const relevantTrades = _.filter(tradesWithInfo, (twi) => {
+                    if( parseFloat(twi.amount) <= 0 ) {
+                        return false;
+                    }
                     if(productPosition <= 0 ) {
                         return false
                     } else {
