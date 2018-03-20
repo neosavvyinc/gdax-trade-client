@@ -243,24 +243,10 @@ if(
         };
     });
 
-
-    const orders = _.map(twoLegPairs, (pair) => {
-        const profit = (pair.sell.price * pair.sell.size) - (pair.buy.price * pair.buy.size);
-        console.log("Profit for order: ", profit);
-        const trade = gdax.executeTwoLegTrade(
-            AuthUtils.getCredentials(commander.authFile),
-            AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile),
-            profit,
-            product,
-            pair.buy,
-            pair.sell);
-
-        return {
-            profit, trade,
-            sell: pair.sell,
-            buy: pair.buy
-        }
-    });
-
-    gdax.output(determineOutputMode(commander), orders, "profit");
+    gdax.executeTwoLegTrade(
+        AuthUtils.getCredentials(commander.authFile),
+        AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile),
+        product,
+        twoLegPairs,
+        determineOutputMode(commander));
 }
