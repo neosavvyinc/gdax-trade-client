@@ -202,27 +202,23 @@ async function listPositions(client, mode = 'json') {
     output(mode, positions.accounts);
 }
 
-async function listCostBasis(client, mode = 'json', product) {
-    const accounts = await client.getAccounts();
-    const positions = await client.listPositions();
-    let productPosition = parseFloat(positions.accounts[product].balance);
-
-    if(productPosition) {
-
-        const tradesByAccount = await Aigle.map(accounts, async (a) => {
+const positionHelper = {
+    tradesByAccount: async (client, accounts) => {
+        return await Aigle.map(accounts, async (a) => {
             const accountHistory = await client.getAccountHistory(a.id);
 
             const trades = _.reduce(accountHistory, (acc, ah) => {
-                if(ah.type === 'match') {
+                if (ah.type === 'match') {
                     acc = acc.concat(ah)
                 }
                 return acc;
             }, []);
-            return { currency: a.currency, trades }
+            return {currency: a.currency, trades}
         });
-
+    },
+    calculateUsdLookupInfo: (tradesByAccount) => {
         const usdInformation = _.find(tradesByAccount, {currency: "USD"});
-        const usdLookupInfo = _.map(usdInformation.trades, (t) => {
+        return _.map(usdInformation.trades, (t) => {
             const info = {
                 tradeId: t.details.trade_id,
                 currencyPair: t.details.product_id,
@@ -231,30 +227,46 @@ async function listCostBasis(client, mode = 'json', product) {
             };
             return info;
         });
+    },
+    findRelevantTrades: (usdLookupInfo, tradeFills, productPosition) => {
+        const tradesWithInfo = _.map(tradeFills.trades, (trade) => {
+            const foundTrade = _.find(usdLookupInfo, {tradeId: trade.details.trade_id});
+            const usdAmount = foundTrade ? foundTrade.usdAmount: 0;
+            return {
+                ...trade,
+                usdCost: Math.abs(usdAmount),
+                [`${_.toLower(tradeFills.currency)}Limit`]: Math.abs(usdAmount / Number(trade.amount))
+            }
+        });
+        const relevantTrades = _.filter(tradesWithInfo, (twi) => {
+            if( parseFloat(twi.amount) <= 0 ) {
+                return false;
+            }
+            if(productPosition <= 0 ) {
+                return false
+            } else {
+                productPosition = productPosition - parseFloat(twi.amount);
+                return true;
+            }
+        });
+        return relevantTrades;
+    }
+
+}
+
+async function listCostBasis(client, mode = 'json', product) {
+    const accounts = await client.getAccounts();
+    const positions = await client.listPositions();
+    let productPosition = parseFloat(positions.accounts[product].balance);
+
+    if(productPosition) {
+
+        const tradesByAccount = await positionHelper.tradesByAccount(client, accounts);
+        const usdLookupInfo = positionHelper.calculateUsdLookupInfo(tradesByAccount);
 
         _.forEach(tradesByAccount, (t) => {
             if(t.currency == product){
-                const tradesWithInfo = _.map(t.trades, (trade) => {
-                    const foundTrade = _.find(usdLookupInfo, {tradeId: trade.details.trade_id});
-                    const usdAmount = foundTrade ? foundTrade.usdAmount: 0;
-                    return {
-                        ...trade,
-                        usdCost: Math.abs(usdAmount),
-                        [`${_.toLower(t.currency)}Limit`]: Math.abs(usdAmount / Number(trade.amount))
-                    }
-                });
-                const relevantTrades = _.filter(tradesWithInfo, (twi) => {
-                    if( parseFloat(twi.amount) <= 0 ) {
-                        return false;
-                    }
-                    if(productPosition <= 0 ) {
-                        return false
-                    } else {
-                        productPosition = productPosition - parseFloat(twi.amount);
-                        return true;
-                    }
-                });
-
+                const relevantTrades = positionHelper.findRelevantTrades(usdLookupInfo, t, productPosition);
                 const usdCosts = _.map(relevantTrades, (twi) => { return Number(twi.usdCost)});
                 const currencyAmounts =  _.map(relevantTrades, (twi) => { return Number(twi.amount)});
                 const costBasis = _.sum(usdCosts) / _.sum(currencyAmounts);
@@ -266,7 +278,39 @@ async function listCostBasis(client, mode = 'json', product) {
     else {
         throw new Error(`No Position for ${product}`);
     }
+}
 
+async function showPositions(client, mode = 'json', product, price, filterFunction) {
+    const accounts = await client.getAccounts();
+    const positions = await client.listPositions();
+
+    let productPosition = parseFloat(positions.accounts[product].balance);
+
+    if(productPosition) {
+
+        const tradesByAccount = await positionHelper.tradesByAccount(client, accounts);
+        const usdLookupInfo = positionHelper.calculateUsdLookupInfo(tradesByAccount);
+
+        _.forEach(tradesByAccount, (t) => {
+            if(t.currency == product){
+                const relevantTrades = _(positionHelper.findRelevantTrades(usdLookupInfo, t, productPosition))
+                    .filter((p) => {
+                        return filterFunction(p.btcLimit, price);
+                    })
+                    .map((t) => {
+                        return {
+                            ...t,
+                            amount: parseFloat(t.amount)
+                        }
+                    })
+                    .value();
+                output(mode, relevantTrades, ["amount", "usdCost"], ["details", "type", "id"]);
+            }
+        });
+    }
+    else {
+        throw new Error(`No Position for ${product}`);
+    }
 }
 
 async function withdrawAll( client, outputMode) {
@@ -343,5 +387,6 @@ module.exports = {
     listCostBasis,
     withdrawAll,
     depositAll,
-    listAllAccounts
+    listAllAccounts,
+    showPositions
 };

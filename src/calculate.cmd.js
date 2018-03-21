@@ -46,6 +46,8 @@ let config, authedClient;
     .option('--json', 'JSON Output Mode')
 
     .option('-c --cost-basis <product>', 'Calculate Average Cost of Position', PRODUCT_ID_REGEX)
+    .option('-i --in-money <product>', 'Calculate In Money Position', PRODUCT_ID_REGEX)
+    .option('-m --price <price>', 'Price to filter', parseFloat)
     .parse(process.argv);
 
 if(commander.authFile) {
@@ -56,4 +58,10 @@ if(commander.authFile) {
 if(commander.costBasis) {
     const product = commander.costBasis;
     gdax.listCostBasis(authedClient, determineOutputMode(commander), product);
+}
+
+if(commander.inMoney) {
+    const product = commander.inMoney;
+    const price = commander.price;
+    gdax.showPositions(authedClient, determineOutputMode(commander), product, price, (position, price) => { return position < price });
 }
