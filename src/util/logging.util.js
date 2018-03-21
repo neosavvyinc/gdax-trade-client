@@ -1,7 +1,7 @@
 const Table = require('easy-table');
 const _ = require('lodash');
 
-function output(mode, data, sumColumn, omitColumns) {
+function output(mode, data, sumColumns, omitColumns) {
     if(!data || _.isEmpty(data)) {
         return;
     }
@@ -25,8 +25,11 @@ function output(mode, data, sumColumn, omitColumns) {
             t.newRow();
         });
 
-        if(sumColumn) {
-            t.total(sumColumn);
+        if(sumColumns) {
+            if(!_.isArray(sumColumns)) {
+                sumColumns = [sumColumns];
+            }
+            _.forEach(sumColumns, (s) => t.total(s) )
         }
 
         console.log(t.toString());
