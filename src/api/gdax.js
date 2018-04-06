@@ -304,6 +304,16 @@ async function showPositions(client, mode = 'json', product, price, filterFuncti
                         }
                     })
                     .value();
+
+                const usdCost = _(relevantTrades).map((twi) => { return Number(twi.usdCost)}).sum();
+                const size = _(relevantTrades).map((twi) => { return Number(twi.amount)}).sum();
+                const sellValue = price * size;
+
+                console.log("Cost: ", usdCost);
+                console.log("Size: ", size);
+                console.log("Sell Value: ", sellValue);
+                console.log("Unrealized Gain: ", sellValue - usdCost);
+
                 output(mode, relevantTrades, ["amount", "usdCost"], ["details", "type", "id"]);
             }
         });
