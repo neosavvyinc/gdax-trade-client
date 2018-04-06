@@ -156,11 +156,12 @@ describe('math', () => {
     });
 
 
-    describe('martingale', function(){
+    describe.only('martingale', function(){
 
         it('should help me calculate a martingale ladder with N steps and base bet of X with total investment not to exceed Y', function() {
-            const ladderResult = calculateMartingalePriceLadder(1000, 10000, 5);
-
+            const ladderResult = calculateMartingalePriceLadder(10000, 20);
+            console.log('ladder: ', ladderResult);
+            expect(ladderResult.length).to.equal(5)
         })
     })
 });
