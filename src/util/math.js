@@ -34,10 +34,20 @@ function calculatePricesForScale(low, high, scale, form = linearForm) {
     });
 }
 
+
+/*
+http://forexop.com/martingale-trading-system-overview/
+https://en.wikipedia.org/wiki/Taleb_distribution
+ */
+function calculateMartingalePriceLadder(base, maxInvestment, steps) {
+    return null;
+}
+
 module.exports = {
     calculatePricesForScale,
     log10Form,
     linearForm,
     calculateLinearScale,
-    calculateLog10Scale
+    calculateLog10Scale,
+    calculateMartingalePriceLadder
 };
