@@ -1,5 +1,6 @@
 import {describe, it} from 'mocha';
 import {expect} from 'chai';
+import _ from 'lodash';
 import {
     calculateLog10Scale,
     calculateLinearScale,
@@ -158,10 +159,38 @@ describe('math', () => {
 
     describe.only('martingale', function(){
 
-        it('should help me calculate a martingale ladder with N steps and base bet of X with total investment not to exceed Y', function() {
-            const ladderResult = calculateMartingalePriceLadder(10000, 20);
-            console.log('ladder: ', ladderResult);
-            expect(ladderResult.length).to.equal(5)
-        })
+        it('should help calculate a simple 3 step ladder with $100 max investment', function() {
+            const ladderResult = calculateMartingalePriceLadder(100, 3);
+            expect(ladderResult.length).to.equal(3);
+            expect(ladderResult).to.deep.equal(
+                [
+                    { amount: 8.333333333333334 },
+                    { amount: 16.666666666666668 },
+                    { amount: 50 }
+                ]
+            )
+        });
+
+        it('should help calculate a simple 10 step ladder with $10000 max investment', function() {
+            const maxInvestment = 10000;
+            const ladderResult = calculateMartingalePriceLadder(maxInvestment, 10);
+            expect(ladderResult.length).to.equal(10);
+            expect(ladderResult).to.deep.equal(
+                [
+                    { amount: 0.48828125},
+                    { amount: 0.9765625},
+                    { amount: 2.9296875},
+                    { amount: 8.7890625},
+                    { amount: 26.3671875},
+                    { amount: 79.1015625},
+                    { amount: 237.3046875},
+                    { amount: 711.9140625},
+                    { amount: 2135.7421875},
+                    { amount: 6407.2265625}
+                ]
+            );
+            expect(maxInvestment - _.sumBy(ladderResult, 'amount')).to.be.below(1000/10)
+            console.log(_.sumBy(ladderResult, 'amount'));
+        });
     })
 });

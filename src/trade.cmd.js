@@ -50,6 +50,10 @@ commander.version(pjson.version)
     .option('--amount <amt>',
         'Amount of Currency to Buy or Sell',
         parseFloat)
+    .option('--scale-in <symbol>',
+        'Buy or Sell a Currency Pair as Limit Order',
+        /^(BTC-USD|BCH-USD|ETH-USD|LTC-USD)/i)
+    .option('--scale-out')
     .option('--buy-source-amount <amt>',
         'Amount of Currency to Buy in Source Currency',
         parseFloat)
@@ -132,6 +136,73 @@ if(commander.cancel) {
             process.exit();
             break;
     }
+}
+
+if(commander.scaleIn) {
+
+
+    const constructPriceLadder = (amountLadder, prices, product) => {
+
+        /*
+         * TODO: Make this a parameter where we support filtering lower bound orders that are likely
+         *  not to be accepted by the exchange due to min-size amounts.
+         */
+        // const filteredAmounts = _.filter(amountLadder, (a) => {
+        //     return a.amount >= 5
+        // });
+        // merge the linear scale with the buy ladder
+        const orderLevels = _.map(amountLadder, (item , idx) => {
+            return _.merge({}, item,  { price: prices[idx] });
+        });
+        const buyParams = {
+            side: 'buy',
+            product_id: product,
+            post_only: true
+        };
+
+        const ladder = _.map(orderLevels, (b, idx) => {
+            const targetAmount = Number(b.amount / b.price).toFixed(5);
+            return _.merge({}, buyParams, {
+                size: targetAmount,
+                price: Number(b.price).toFixed(2),
+                cost: b.amount
+            });
+        });
+        return ladder;
+
+    };
+
+    if(commander.buySourceAmount && commander.entryPrice) {
+        const product = commander.scaleIn;
+        const logarithmicSteps = Number(commander.logarithmicSteps);
+        const logScale = math.calculateLog10Scale(logarithmicSteps);
+        const entryPrice = Number(commander.entryPrice).toFixed(5);
+        const lowerBound = commander.lowerBound ? Number(commander.lowerBound) : 0.9775;
+
+        console.log("Submitting BUY orders for");
+        console.log("Currency:    ", product);
+        console.log("With Entry Price: ", commander.entryPrice);
+
+        const amountLadder = math.calculateMartingalePriceLadder(commander.buySourceAmount, logarithmicSteps);
+
+        // compute the linear or logarithmic price scale downward
+        const buyPrices = math.calculatePricesForScale(Number(entryPrice), Number(entryPrice) * lowerBound, logScale, math.log10Form);
+        const ladder = constructPriceLadder(amountLadder, buyPrices, product);
+        output(determineOutputMode(commander), ladder, 'cost');
+
+        _.forEach(ladder, (buyOrder) => {
+            gdax.buyLimit(
+                authedClient,
+                product,
+                buyOrder.size,
+                buyOrder.price,
+                determineOutputMode(commander))
+        });
+    }
+}
+
+if(commander.scaleOut) {
+
 }
 
 if(commander.buyLimit) {

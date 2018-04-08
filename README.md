@@ -71,6 +71,54 @@ Place an Order as a Sell Side Limit Order
 
 `node src/trade.cmd.js --auth-file adam_parrish.sandbox.json --sell-limit BTC-USD --amount 1 --limit-price 1900`
 
+Place a Scale In Order to Buy via Martingale Price Ladder
+
+`gtrade  -f ./adam_parrish.json -r --scale-in BTC-USD --buy-source-amount 10000 --entry-price 5000 --logarithmic-steps 8`
+
+which will produce the following buy orders to provide more opportunities to sell as a price is declining:
+
+```
+orange:gdax-trade-client adamparrish$ gtrade --table -f ./adam_parrish.json -r --scale-in BTC-USD --buy-source-amount 10000 --entry-price 5000 --logarithmic-steps 15 --lower-bound 0.6
+Submitting BUY orders for
+Currency:     BTC-USD
+With Entry Price:  5000
+side   product_id  post_only  size       price      cost
+-----  ----------  ---------  ---------  ---------  -----------------
+"buy"  "BTC-USD"   true       "0.00334"  "5000.00"            16.6855
+"buy"  "BTC-USD"   true       "0.01017"  "4919.73"            50.0565
+"buy"  "BTC-USD"   true       "0.03123"  "4809.15"           150.1694
+"buy"  "BTC-USD"   true       "0.09629"  "4678.90"           450.5081
+"buy"  "BTC-USD"   true       "0.29809"  "4534.02"          1351.5244
+"buy"  "BTC-USD"   true       "0.92623"  "4377.48"          4054.5731
+-----  ----------  ---------  ---------  ---------  -----------------
+                                                    6073.516845703125
+
+price            size          product_id  side   stp   type     time_in_force  post_only  created_at                     fill_fees             filled_size   executed_value        status     settled
+---------------  ------------  ----------  -----  ----  -------  -------------  ---------  -----------------------------  --------------------  ------------  --------------------  ---------  -------
+"5000.00000000"  "0.00334000"  "BTC-USD"   "buy"  "dc"  "limit"  "GTC"          true       "2018-04-08T17:47:22.569224Z"  "0.0000000000000000"  "0.00000000"  "0.0000000000000000"  "pending"  false
+
+price            size          product_id  side   stp   type     time_in_force  post_only  created_at                     fill_fees             filled_size   executed_value        status     settled
+---------------  ------------  ----------  -----  ----  -------  -------------  ---------  -----------------------------  --------------------  ------------  --------------------  ---------  -------
+"4919.73000000"  "0.01017000"  "BTC-USD"   "buy"  "dc"  "limit"  "GTC"          true       "2018-04-08T17:47:22.622521Z"  "0.0000000000000000"  "0.00000000"  "0.0000000000000000"  "pending"  false
+
+price            size          product_id  side   stp   type     time_in_force  post_only  created_at                     fill_fees             filled_size   executed_value        status     settled
+---------------  ------------  ----------  -----  ----  -------  -------------  ---------  -----------------------------  --------------------  ------------  --------------------  ---------  -------
+"4534.02000000"  "0.29809000"  "BTC-USD"   "buy"  "dc"  "limit"  "GTC"          true       "2018-04-08T17:47:22.627123Z"  "0.0000000000000000"  "0.00000000"  "0.0000000000000000"  "pending"  false
+
+price            size          product_id  side   stp   type     time_in_force  post_only  created_at                    fill_fees             filled_size   executed_value        status     settled
+---------------  ------------  ----------  -----  ----  -------  -------------  ---------  ----------------------------  --------------------  ------------  --------------------  ---------  -------
+"4809.15000000"  "0.03123000"  "BTC-USD"   "buy"  "dc"  "limit"  "GTC"          true       "2018-04-08T17:47:22.63499Z"  "0.0000000000000000"  "0.00000000"  "0.0000000000000000"  "pending"  false
+
+price            size          product_id  side   stp   type     time_in_force  post_only  created_at                     fill_fees             filled_size   executed_value        status     settled
+---------------  ------------  ----------  -----  ----  -------  -------------  ---------  -----------------------------  --------------------  ------------  --------------------  ---------  -------
+"4377.48000000"  "0.92623000"  "BTC-USD"   "buy"  "dc"  "limit"  "GTC"          true       "2018-04-08T17:47:22.636251Z"  "0.0000000000000000"  "0.00000000"  "0.0000000000000000"  "pending"  false
+
+price            size          product_id  side   stp   type     time_in_force  post_only  created_at                     fill_fees             filled_size   executed_value        status     settled
+---------------  ------------  ----------  -----  ----  -------  -------------  ---------  -----------------------------  --------------------  ------------  --------------------  ---------  -------
+"4678.90000000"  "0.09629000"  "BTC-USD"   "buy"  "dc"  "limit"  "GTC"          true       "2018-04-08T17:47:22.647323Z"  "0.0000000000000000"  "0.00000000"  "0.0000000000000000"  "pending"  false
+
+```
+
 
 ### Accesing GDAX - For Real
 
