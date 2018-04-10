@@ -18,7 +18,7 @@ async function listProducts(client, mode = 'json') {
 async function listCoinbaseAccounts(client, mode = 'json') {
     try {
         const accounts = await client.getCoinbaseAccounts();
-        output(mode, accounts, undefined, ['id', 'primary', 'active', 'wire_deposit_information']);
+        output(mode, accounts, undefined, [ 'primary', 'active', 'wire_deposit_information']);
     } catch (error) {
         console.log(error);
     }
@@ -245,6 +245,15 @@ async function listCostBasis(client, mode = 'json', product) {
 
 }
 
+async function withdrawAll( client, outputMode) {
+    const withdrawParamsUSD = {
+        amount: '11542.13',
+        currency: 'USD',
+        coinbase_account_id: 'x', // USD Coinbase Account ID
+    };
+    client.withdraw(withdrawParamsUSD);
+}
+
 module.exports = {
     output,
     listProducts,
@@ -258,4 +267,5 @@ module.exports = {
     sellLimit,
     listPositions,
     listCostBasis,
+    withdrawAll
 };

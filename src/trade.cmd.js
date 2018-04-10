@@ -64,6 +64,8 @@ commander.version(pjson.version)
         'Limit Price when Buying or Selling of a whole Unit',
         parseFloat)
 
+    .option('--withdraw-all')
+
     /**
      * Output Modes
      */
@@ -108,6 +110,11 @@ if(commander.list) {
             gdax.listPositions(authedClient, determineOutputMode(commander));
             break;
     }
+}
+
+if(commander.withdrawAll) {
+    gdax.withdrawAll(AuthUtils.getAuthenticatedClient(true, commander.real, commander.authFile),
+        determineOutputMode(commander))
 }
 
 

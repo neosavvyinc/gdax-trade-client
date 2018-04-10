@@ -66,8 +66,8 @@ function calculateMartingalePriceLadder(maxInvestment, steps) {
             // revise and recurse - base bet is too big cut it in half
             const revision = base / 2;
             return computeLadderHelper(revision, steps);
-        } else if ( maxInvestment - totalExposure < (base / steps) / 10 ) {
-            const revision = base * 1.25;
+        } else if ( maxInvestment - totalExposure < (base / steps) / 100 ) {
+            const revision = base * 1.5;
             // revise and recurse - base bet is too small multiply it by 1.25
             return computeLadderHelper(revision, steps);
         } else {
