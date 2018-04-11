@@ -65,6 +65,8 @@ commander.version(pjson.version)
         parseFloat)
 
     .option('--withdraw-all')
+    .option('--deposit-all')
+    .option('--list-all')
 
     /**
      * Output Modes
@@ -114,6 +116,17 @@ if(commander.list) {
 
 if(commander.withdrawAll) {
     gdax.withdrawAll(AuthUtils.getAuthenticatedClient(true, commander.real, commander.authFile),
+        determineOutputMode(commander))
+}
+
+
+if(commander.depositAll) {
+    gdax.depositAll(AuthUtils.getAuthenticatedClient(true, commander.real, commander.authFile),
+        determineOutputMode(commander))
+}
+
+if(commander.listAll) {
+    gdax.listAllAccounts(AuthUtils.getAuthenticatedClient(true, commander.real, commander.authFile),
         determineOutputMode(commander))
 }
 

@@ -246,12 +246,62 @@ async function listCostBasis(client, mode = 'json', product) {
 }
 
 async function withdrawAll( client, outputMode) {
-    const withdrawParamsUSD = {
-        amount: '11542.13',
-        currency: 'USD',
-        coinbase_account_id: 'x', // USD Coinbase Account ID
-    };
-    client.withdraw(withdrawParamsUSD);
+    const coinbaseAccounts = await client.getCoinbaseAccounts();
+    const gdaxAccount = await client.getAccounts();
+
+    console.log("Coinbase Account Balances");
+    output(outputMode, coinbaseAccounts,null, ['wire_deposit_information']);
+
+    console.log("GDAX Account Balances");
+    output(outputMode, gdaxAccount);
+
+    Aigle.forEach(gdaxAccount, async (a) =>{
+        const targetAccount = _.find(coinbaseAccounts, (c) => {
+            c.currency === a.currency;
+        });
+        console.log(`Withdrawing a total of ${a.balance} from GDAX to Coinbase from the ${a.currency} account`);
+        const withdrawParamsUSD = {
+            amount: a.balance,
+            currency: a.currency,
+            coinbase_account_id: targetAccount.id,
+        };
+        await client.withdraw(withdrawParamsUSD);
+    });
+}
+
+async function depositAll(client, outputMode) {
+    const coinbaseAccounts = await client.getCoinbaseAccounts();
+    const gdaxAccounts = await client.getAccounts();
+
+    console.log("Coinbase Account Balances");
+    output(outputMode, coinbaseAccounts,null, ['wire_deposit_information']);
+
+    console.log("GDAX Account Balances");
+    output(outputMode, gdaxAccounts);
+
+    Aigle.forEach(coinbaseAccounts, async (s) =>{
+        const targetAccount = _.find(gdaxAccounts, (t) => {
+            t.currency === s.currency;
+        });
+        console.log(`Depositing a total of ${s.balance} from Coinbase to GDAX from the ${s.currency} account`);
+        const depositParams = {
+            amount: s.balance,
+            currency: s.currency,
+            coinbase_account_id: s.id,
+        };
+        await client.deposit(depositParams);
+    });
+}
+
+async function listAllAccounts(client, outputMode) {
+    const coinbaseAccounts = await client.getCoinbaseAccounts();
+    const gdaxAccounts = await client.getAccounts();
+
+    console.log("Coinbase Account Balances");
+    output(outputMode, coinbaseAccounts,null, ['wire_deposit_information']);
+
+    console.log("GDAX Account Balances");
+    output(outputMode, gdaxAccounts);
 }
 
 module.exports = {
@@ -267,5 +317,7 @@ module.exports = {
     sellLimit,
     listPositions,
     listCostBasis,
-    withdrawAll
+    withdrawAll,
+    depositAll,
+    listAllAccounts
 };
