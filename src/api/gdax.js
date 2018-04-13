@@ -295,6 +295,8 @@ async function showPositions(client, mode = 'json', product, price, filterFuncti
             if(t.currency == product){
                 const relevantTrades = _(positionHelper.findRelevantTrades(usdLookupInfo, t, productPosition))
                     .filter((p) => {
+                        console.log("position: ", p.btcLimit);
+                        console.log("price: ", price);
                         return filterFunction(p.btcLimit, price);
                     })
                     .map((t) => {

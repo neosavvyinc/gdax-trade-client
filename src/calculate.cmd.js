@@ -63,5 +63,5 @@ if(commander.costBasis) {
 if(commander.inMoney) {
     const product = commander.inMoney;
     const price = commander.price;
-    gdax.showPositions(authedClient, determineOutputMode(commander), product, price, (position, price) => { return position < price });
+    gdax.showPositions(authedClient, determineOutputMode(commander), product, price, (position, price) => { return position <= price });
 }
