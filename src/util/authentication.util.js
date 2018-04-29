@@ -13,6 +13,15 @@ function determineURI(real = false) {
     return real ? apiURI : sandboxURI;
 }
 
+function initializeBittrex(bittrex, authFile) {
+    const configFile = getCredentials(authFile);
+    const credentials = configFile && configFile.gdax ? configFile.bittrex : {};
+    bittrex.options({
+        'apikey' : credentials.key,
+        'apisecret' : credentials.secret,
+    });
+}
+
 function getAuthenticatedClient(base = false, real = false, authFile) {
     const configFile = getCredentials(authFile);
     const credentials = configFile && configFile.gdax ? configFile.gdax : {};
@@ -61,5 +70,6 @@ function getCredentials(authFile) {
 
 module.exports = {
     getAuthenticatedClient,
-    getCredentials
+    getCredentials,
+    initializeBittrex
 };

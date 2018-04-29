@@ -2,6 +2,7 @@
 const commander = require('commander');
 
 const gdax = require('./api/gdax');
+const bittrex = require('node.bittrex.api');
 const math = require('./util/math');
 const _ = require('lodash');
 const pjson = require('../package.json');
@@ -25,7 +26,7 @@ commander.version(pjson.version)
      */
     .option('-l --list <type>',
         'List By Object Type',
-        /^(coinbase-accounts|orders|products|gdax-accounts|positions)$/i)
+        /^(coinbase-accounts|orders|products|gdax-accounts|bittrex-accounts|positions|deposit-address)$/i)
     .option('--ignore-usd')
 
     /**
@@ -94,8 +95,22 @@ commander.version(pjson.version)
 
 
 const authedClient = AuthUtils.getAuthenticatedClient(false, commander.real, commander.authFile);
+AuthUtils.initializeBittrex(bittrex, commander.authFile);
+
 if(commander.list) {
     switch (commander.list) {
+        case "deposit-address":
+            console.log("stuff")
+            bittrex.getdepositaddress({currency: 'BTC'}, (data, err)=> {
+                console.log(data)
+                console.log(err)
+            });
+            break;
+        case "bittrex-accounts":
+            console.log("Balances", bittrex.getbalances((data, err)=> {
+                console.log(data)
+            }));
+            break;
         case "coinbase-accounts":
             gdax.listCoinbaseAccounts(authedClient, determineOutputMode(commander));
             break;
