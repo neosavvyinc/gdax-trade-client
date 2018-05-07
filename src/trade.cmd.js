@@ -100,10 +100,8 @@ AuthUtils.initializeBittrex(bittrex, commander.authFile);
 if(commander.list) {
     switch (commander.list) {
         case "deposit-address":
-            console.log("stuff")
             bittrex.getdepositaddress({currency: 'BTC'}, (data, err)=> {
-                console.log(data)
-                console.log(err)
+                console.log(data);
             });
             break;
         case "bittrex-accounts":
