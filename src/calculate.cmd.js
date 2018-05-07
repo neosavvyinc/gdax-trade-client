@@ -46,6 +46,7 @@ let config, authedClient;
     .option('--json', 'JSON Output Mode')
 
     .option('-c --cost-basis <product>', 'Calculate Average Cost of Position', PRODUCT_ID_REGEX)
+    .option('--list-fills <product>', 'Show Fills', PRODUCT_ID_REGEX)
     .parse(process.argv);
 
 if(commander.authFile) {
@@ -56,4 +57,9 @@ if(commander.authFile) {
 if(commander.costBasis) {
     const product = commander.costBasis;
     gdax.listCostBasis(authedClient, determineOutputMode(commander), product);
+}
+
+if(commander.listFills) {
+    const product = commander.listFills;
+    gdax.listFills(authedClient, determineOutputMode(commander), product);
 }

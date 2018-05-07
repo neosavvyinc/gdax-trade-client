@@ -181,6 +181,63 @@ async function listPositions(client, mode = 'json') {
     output(mode, positions.accounts);
 }
 
+/**
+ * Test Code
+ */
+function getInitialFills(client) {
+    const p = new Promise((resolve, reject) => {
+        client.getFills({
+            limit: 100
+        }, (ignore, resp, fills) => {
+            resolve({
+                cbAfter: resp.headers['cb-after'],
+                cbBefore: resp.headers['cb-before'],
+                fills: fills
+            });
+        });
+    });
+
+    return p;
+}
+
+/**
+ * Test Code
+ */
+function getOlderFills(client, after) {
+    const p = new Promise((resolve, reject) => {
+        client.getFills({
+            limit: 100,
+            after
+        }, (ignore, resp, fills) => {
+            resolve({
+                cbAfter: resp && resp.headers ? resp.headers['cb-after'] : null,
+                cbBefore: resp && resp.headers ? resp.headers['cb-before'] : null,
+                fills: fills
+            });
+        });
+    });
+
+    return p;
+}
+
+
+/**
+ * Test Code
+ */
+async function listFills(client, mode = 'json') {
+    let fills = [];
+    let count = 0;
+    let result = await getInitialFills(client);
+    fills = fills.concat(result.fills);
+    while(count < 100) {
+        count = count + 1;
+        result = await getOlderFills(client, result.cbAfter);
+        fills = fills.concat(result.fills);
+    }
+    output(mode, fills);
+}
+
+
 async function listCostBasis(client, mode = 'json', product) {
     const accounts = await client.getAccounts();
     const positions = await client.listPositions();
@@ -319,5 +376,6 @@ module.exports = {
     listCostBasis,
     withdrawAll,
     depositAll,
-    listAllAccounts
+    listAllAccounts,
+    listFills
 };
