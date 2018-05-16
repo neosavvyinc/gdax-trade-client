@@ -220,6 +220,14 @@ function getOlderFills(client, after) {
     return p;
 }
 
+async function listHistoricRates(client, mode = 'json', product, params) {
+    try {
+        return await publicClient.getProductHistoricRates(product, params);
+    } catch(error) {
+        console.log("error: ", error);
+    }
+}
+
 
 /**
  * Test Code
@@ -377,5 +385,6 @@ module.exports = {
     withdrawAll,
     depositAll,
     listAllAccounts,
-    listFills
+    listFills,
+    listHistoricRates
 };

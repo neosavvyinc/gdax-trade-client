@@ -6,11 +6,12 @@
   "dependencies": {
     "aigle": "^1.10.1",
     "aws-sdk": "^2.207.0",
+    "colors": "^1.2.5",
     "commander": "^2.14.1",
     "easy-table": "^1.1.1",
     "gdax": "^0.7.0",
     "lodash": "^4.17.5",
-    "moment": "^2.20.1",
+    "moment": "^2.22.1",
     "node.bittrex.api": "^1.0.0",
     "pg": "^7.4.1",
     "twix": "^1.2.1"
@@ -18,12 +19,14 @@
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2017": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "chai": "^4.1.2",
     "mocha": "^5.0.0"
   },
   "scripts": {
-    "test": "npx mocha --compilers js:babel-core/register test/math.test.js"
+    "test": "npx mocha --require babel-core/register test/**/*.test.js",
+    "test:debug": "npx mocha --inspect-brk --require babel-core/register test/**/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -40,6 +43,7 @@
     "gmon": "./src/monitor.cmd.js",
     "gimport": "./src/importer.cmd.js",
     "galert": "./src/alert.cmd.js",
-    "gcalc": "./src/calculate.cmd.js"
+    "gcalc": "./src/calculate.cmd.js",
+    "gdemark": "./src/demark.cmd.js"
   }
 }

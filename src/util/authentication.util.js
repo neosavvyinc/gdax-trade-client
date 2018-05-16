@@ -13,6 +13,10 @@ function determineURI(real = false) {
     return real ? apiURI : sandboxURI;
 }
 
+function determineWsURI(real = false) {
+    return real ? wsApiURI : sandboxWsApiURI;
+}
+
 function initializeBittrex(bittrex, authFile) {
     const configFile = getCredentials(authFile);
     const credentials = configFile && configFile.gdax ? configFile.bittrex : {};
@@ -20,6 +24,17 @@ function initializeBittrex(bittrex, authFile) {
         'apikey' : credentials.key,
         'apisecret' : credentials.secret,
     });
+}
+
+function getAuthenticatedWebSocket(real = false, authedClient, product) {
+    return new Gdax.WebsocketClient(
+        [product],
+        determineWsURI(real),
+        authedClient,
+        {
+            channels: ['ticker']
+        }
+    );
 }
 
 function getAuthenticatedClient(base = false, real = false, authFile) {
@@ -48,6 +63,12 @@ function getAuthenticatedClient(base = false, real = false, authFile) {
     }
 }
 
+function getPublicClient(real = false) {
+    return new Gdax.PublicClient(
+        determineURI(real)
+    );
+}
+
 function getCredentials(authFile) {
     if(authFile) {
         try {
@@ -69,7 +90,9 @@ function getCredentials(authFile) {
 }
 
 module.exports = {
+    getPublicClient,
     getAuthenticatedClient,
+    getAuthenticatedWebSocket,
     getCredentials,
     initializeBittrex
 };
